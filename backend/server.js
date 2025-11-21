@@ -51,12 +51,27 @@ app.use(cors());
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting configuration
+const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false
 });
-app.use(limiter);
+
+// Stricter rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 requests per windowMs
+  message: 'Too many login attempts, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Apply rate limiting to specific routes
+app.use('/api/auth', authLimiter);
+app.use(apiLimiter); // Apply to all other routes
 
 // Body parser
 app.use(express.json());
